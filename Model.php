@@ -204,6 +204,7 @@ class Model
             foreach ($original_data as $val) {
                 //组织数据,过滤不需要的字段
                 $new_data = $this->assemblyData($val);
+
                 if (!empty($new_data)) {
                     if ($this->is_exists_primary_key($new_data)) {
                         $new_data_arr[] = $new_data;
@@ -228,9 +229,11 @@ class Model
                     $this->queryByPrimaryKey($new_data);
                     if(empty($this->db_data))
                     {
+
                         $this->initInsertData($new_data);
                     }else
                     {
+
                         //初始化插入更新
                         $this->initUpdateData($new_data);
                     }
@@ -250,10 +253,12 @@ class Model
      */
     private function initInsertData($data)
     {
+
         if($this->is_insert)
         {
             if($this->initInsertDataCB($data))
             {
+
                 $this->insert_data[] = $data;
                 $data['created_at'] = _now();
                 if ($this->is_create_id) {
@@ -347,6 +352,10 @@ class Model
      */
     private function setForeignKeyVal($data)
     {
+        if(empty($this->foreign_key))
+        {
+            return $data;
+        }
         if (is_array($this->foreign_key)) {
             foreach ($this->foreign_key as $val) {
                 if (empty($data[$val])) {
@@ -366,6 +375,10 @@ class Model
      */
     private function setRedundantData($data)
     {
+        if(empty($this->redundant))
+        {
+            return $data;
+        }
         if (is_array($this->redundant)) {
             foreach ($this->redundant as $val) {
                 if (empty($data[$val])) {
@@ -383,14 +396,19 @@ class Model
     /**
      * 对比数据
      */
-    private function contrastData($data1, $data2)
+    private function contrastData($db_data, $data)
     {
         $change = [];
-        foreach ($data1 as $key => $val) {
-            if ($val != $data2[$key]) {
-                $change[$key] = $data2[$key];
+        foreach ($db_data as $key => $val) {
+            if(!isset($data[$key]))
+            {
+                continue;
+            }
+            if ($val != $data[$key]) {
+                $change[$key] = $data[$key];
             }
         }
+
         return $change;
     }
 
@@ -472,11 +490,12 @@ class Model
     {
         $new_data = [];
         foreach ($this->fields as $val) {
-            if (isset($original_data[$val]))
+            if (isset($original_data[$val]) && $original_data[$val]!='')
                 $new_data[$val] = $original_data[$val];
-            else
-                $new_data[$val] = null;
+//            else
+//                $new_data[$val] = null;
         }
+
         return $new_data;
     }
 
