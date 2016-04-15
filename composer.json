@@ -11,5 +11,10 @@
       "name": "dxc",
       "email": "605863278@qq.com"
     }
-  ]
+  ],
+  "autoload": {
+        "psr-4": {
+            "Tool\\": ""
+        }
+    }
 }
