@@ -1,3 +1,15 @@
 {
-	
+  "name": "laravel/tool",
+  "type": "library",
+  "description": "laravel的工具类",
+  "keywords": [],
+  "support": {
+    "issues": "https://github.com/sasaosasa"
+  },
+  "authors": [
+    {
+      "name": "dxc",
+      "email": "605863278@qq.com"
+    }
+  ]
 }
