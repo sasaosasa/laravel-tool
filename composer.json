@@ -1,5 +1,5 @@
 {
-  "name": "laravel/tool",
+  "name": "dxc/tool",
   "type": "library",
   "description": "laravel的工具类",
   "keywords": [],
