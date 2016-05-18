@@ -6,24 +6,26 @@
  * Time: 17:02
  */
 
-namespace Tool\Wx;
+namespace Tool\WxQy;
 
 
-class   WxExecute extends WxToken
+
+use Symfony\Component\HttpKernel\DataCollector\DumpDataCollector;
+
+class  WxQyExecute extends WxQyToken
 {
     public function execute($uri, $type = "", $data = "", $remarks = "")
     {
         $res = $this->execute_return($uri, $data);
         if (!$res['result']) {
             $error = $res['msg'];
-            error_to_db($type, $data, $error, $remarks);
-            _pack($type . "错误。请管理员查看日志！" . $error, false);
+            error_to_db($type, $data, $error, "URL:".$uri);
+            _pack($type . "错误。请管理员查看日志！" . json_encode_cn($error), false);
             return false;
         } else {
             return $res['data'];
         }
     }
-
     /**
      * 执行返回
      */
@@ -71,11 +73,11 @@ class   WxExecute extends WxToken
         if ($res_arr == false || !is_array($res_arr) || (isset($res_arr['errcode']) && $res_arr['errcode'] !== 0)) {
             //请求失败
             if (isset($res_arr['errcode'])) {
-                return _output($res, false, $res_arr['errcode']);
+                return _output($res_arr, false, $res_arr['errcode']);
             }
-            return _output($res, false, -100);
+            return _output($res_arr, false, -100);
         } else {
-            return _output($res);
+            return _output($res_arr);
         }
     }
 }

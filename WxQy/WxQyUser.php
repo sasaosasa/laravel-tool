@@ -9,7 +9,7 @@
 namespace Tool\WxQy;
 
 
-class WxQyUser extends WxQyUtil
+class WxQyUser extends WxQyExecute
 {
     public function create($data)
     {

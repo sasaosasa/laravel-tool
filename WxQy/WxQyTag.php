@@ -8,8 +8,7 @@
 
 namespace Tool\WxQy;
 
-
-class WxQyTag extends WxQyUtil
+class WxQyTag extends WxQyExecute
 {
     public function create($data)
     {

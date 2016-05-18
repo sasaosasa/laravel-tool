@@ -9,38 +9,43 @@
 namespace Tool\WxQy;
 
 use Tool\Routing\Url;
+
 /**
  * 用户
  * Class WxOauth
  * @package App\Tool\WxQy
  */
-class WxQyLogin extends  WxQyUtil
+class WxQyLogin extends WxQyExecute
 {
-    public function getCode($state = '',$redirectAction = 'Wx@anyWxQyGetUserInfo')
+    public function getCode($state = '', $redirectAction = 'Wx@anyWxQyGetUserInfo')
     {
-        $url_tool =new Url();
-        $redirectUrl=$url_tool->action($redirectAction);
-        $url=$this->createOauthUrlForCode($redirectUrl, $state);
+        $url_tool = new Url();
+        $redirectUrl = $url_tool->action($redirectAction);
+        $url = $this->createOauthUrlForCode($redirectUrl, $state);
         return $url;
     }
+
     public function getUserId()
     {
-        $url="https://qyapi.weixin.qq.com/cgi-bin/user/getuserinfo?access_token=ACCESS_TOKEN&code={$_GET['code']}";
-        return $this->execute($url,"获取UserId");
+        $url = "https://qyapi.weixin.qq.com/cgi-bin/user/getuserinfo?access_token=ACCESS_TOKEN&code={$_GET['code']}";
+        return $this->execute_return($url);
     }
+
     public function getUserInfo($user_id)
     {
-        $url="https://qyapi.weixin.qq.com/cgi-bin/user/get?access_token=ACCESS_TOKEN&userid=$user_id";
-        return $this->execute($url);
+        $url = "https://qyapi.weixin.qq.com/cgi-bin/user/get?access_token=ACCESS_TOKEN&userid=$user_id";
+        return $this->execute_return($url)['data'];
     }
+
     public function getOpenId($data)
     {
-        $url="https://qyapi.weixin.qq.com/cgi-bin/user/convert_to_openid?access_token=ACCESS_TOKEN";
-        return $this->execute($url,"获取openID",$data);
+        $url = "https://qyapi.weixin.qq.com/cgi-bin/user/convert_to_openid?access_token=ACCESS_TOKEN";
+        return $this->execute_return($url, $data)['data'];
     }
+
     private function createOauthUrlForCode($redirectUrl, $state)
     {
-        $urlObj["appid"] = $this->corpId;
+        $urlObj["appid"] = $this->corp_id;
         $urlObj["redirect_uri"] = "$redirectUrl";
         $urlObj["response_type"] = "code";
         $urlObj["scope"] = "snsapi_base";

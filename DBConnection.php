@@ -23,6 +23,18 @@ class DBConnection
         $this->connection = $this->facadeRoot->connection($this->connection_name);
     }
 
+    public function sharedLock()
+    {
+        $this->connection->sharedLock();
+        return $this;
+    }
+
+    public function lockForUpdate()
+    {
+        $this->connection->lockForUpdate();
+        return $this;
+    }
+
     public function getPdo()
     {
         return $this->connection->getPdo();
@@ -31,7 +43,12 @@ class DBConnection
     public function get($columns = ['*'])
     {
         $data = $this->connection->get($columns);
-        $res = $this->objectToArray($data);
+        config('database.fetch');
+        if (config('database.fetch') == \PDO::FETCH_ASSOC) {
+            $res = $data;
+        } else {
+            $res = $this->objectToArray($data);
+        }
         $this->connection = $this->facadeRoot->connection($this->connection_name);
         $this->table($this->table);
         return $res;
@@ -147,7 +164,11 @@ class DBConnection
         $data = $this->connection->first($columns);
         $this->connection = $this->facadeRoot->connection($this->connection_name);
         $this->table($this->table);
-        return (array)$data;
+        if (config('database.fetch') == \PDO::FETCH_ASSOC) {
+            return $data;
+        } else {
+            return (array)$data;
+        }
     }
 
     public function join($table, $one, $operator = null, $two = null, $type = 'inner', $where = false)

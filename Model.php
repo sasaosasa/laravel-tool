@@ -12,10 +12,11 @@ namespace Tool;
 class Model
 {
     public $is_create_id = true;//是否要加创建人ID
-    public  $change_records=[];
-    public  $is_insert=true;
-    public  $is_update=true;
-    public  $is_delete=true;
+    public $is_created_at = true;
+    public $change_records = [];
+    public $is_insert = true;
+    public $is_update = true;
+    public $is_delete = true;
 
     protected $table;
     protected $primary_key;//主键
@@ -38,7 +39,7 @@ class Model
     private $db_data;//数据库数据
 
 
-    protected $auto_increment=true;//自增
+    protected $auto_increment = true;//自增
 
     public function __construct()
     {
@@ -59,27 +60,23 @@ class Model
     }
 
 
-
     /**
      * 改变记录（需要重写改方法）
      */
-    protected function changeRecords($type,$new,$old)
+    protected function changeRecords($type, $new, $old)
     {
-        if($type==1)
-        {
+        if ($type == 1) {
             //插入
 
-        }else if($type==2)
-        {
+        } else if ($type == 2) {
             //更新
 
-        }
-        else if($type==4)
-        {
+        } else if ($type == 4) {
             //删除
 
         }
     }
+
     /**
      * 保存（无ID插入，有ID更新）并返回记录
      */
@@ -144,6 +141,7 @@ class Model
         }
         return $primary_key;
     }
+
     private function getForeignKey($data)
     {
         $foreign_key = [];
@@ -227,12 +225,10 @@ class Model
                 if ($this->is_exists_primary_key($new_data)) {
                     //通过主键查询
                     $this->queryByPrimaryKey($new_data);
-                    if(empty($this->db_data))
-                    {
+                    if (empty($this->db_data)) {
 
                         $this->initInsertData($new_data);
-                    }else
-                    {
+                    } else {
 
                         //初始化插入更新
                         $this->initUpdateData($new_data);
@@ -244,23 +240,25 @@ class Model
             }
         }
     }
+
     protected function initInsertDataCB(&$data)
     {
         return true;
     }
+
     /**
      * 初始化插入数据
      */
     private function initInsertData($data)
     {
 
-        if($this->is_insert)
-        {
-            if($this->initInsertDataCB($data))
-            {
+        if ($this->is_insert) {
+            if ($this->initInsertDataCB($data)) {
 
                 $this->insert_data[] = $data;
-                $data['created_at'] = _now();
+                if ($this->is_created_at) {
+                    $data['created_at'] = _now();
+                }
                 if ($this->is_create_id) {
                     $data['create_id'] = _userID();
                 }
@@ -271,22 +269,23 @@ class Model
                     $data = array_merge($data, $this->redundant_data);
                 }
                 $this->_insert_data[] = $data;
-                $this->changeRecords(1,$data,null);
+                $this->changeRecords(1, $data, null);
             }
         }
     }
-    protected function initUpdateDataCB(&$data,$old)
+
+    protected function initUpdateDataCB(&$data, $old)
     {
         return true;
     }
+
     /**
      * 初始化插入更新
      */
     private function initUpdateData($data)
     {
 
-        if ($this->is_update)
-        {
+        if ($this->is_update) {
             $data = $this->setForeignKeyVal($data);
             $data = $this->setRedundantData($data);
             foreach ($this->db_data as $val) {
@@ -294,15 +293,14 @@ class Model
 
                     $change = $this->contrastData($val, $data);
                     if (!empty($change)) {
-                        if(!$this->initUpdateDataCB($change,$val))
-                        {
+                        if (!$this->initUpdateDataCB($change, $val)) {
                             continue;
                         }
                         $this->update_data[] = $change;
                         $change['updated_at'] = _now();
                         $change = array_merge($this->getPrimaryKey($val), $change);
                         $this->_update_data[] = $change;
-                        $this->changeRecords(2,$change,$val);
+                        $this->changeRecords(2, $change, $val);
                     }
                 }
             }
@@ -313,13 +311,13 @@ class Model
     {
         return true;
     }
+
     /**
      * 初始化要删除的数据
      */
     private function initDeleteData($data)
     {
-        if($this->is_delete)
-        {
+        if ($this->is_delete) {
             foreach ($this->db_data as $val1) {
                 $status = true;
                 foreach ($data as $val2) {
@@ -330,8 +328,7 @@ class Model
                 }
                 if ($status) {
                     //硬删除
-                    if(!$this->initDeleteDataCB($val1))
-                    {
+                    if (!$this->initDeleteDataCB($val1)) {
                         continue;
                     }
                     $this->delete_data[] = $val1;
@@ -341,7 +338,7 @@ class Model
                     } else {
                         $this->_delete_data1[] = array_values($primary_key)[0];
                     }
-                    $this->changeRecords(4,null,$val1);
+                    $this->changeRecords(4, null, $val1);
                 }
             }
         }
@@ -352,8 +349,7 @@ class Model
      */
     private function setForeignKeyVal($data)
     {
-        if(empty($this->foreign_key))
-        {
+        if (empty($this->foreign_key)) {
             return $data;
         }
         if (is_array($this->foreign_key)) {
@@ -375,8 +371,7 @@ class Model
      */
     private function setRedundantData($data)
     {
-        if(empty($this->redundant))
-        {
+        if (empty($this->redundant)) {
             return $data;
         }
         if (is_array($this->redundant)) {
@@ -400,8 +395,7 @@ class Model
     {
         $change = [];
         foreach ($db_data as $key => $val) {
-            if(!isset($data[$key]))
-            {
+            if (!isset($data[$key])) {
                 continue;
             }
             if ($val != $data[$key]) {
@@ -490,7 +484,7 @@ class Model
     {
         $new_data = [];
         foreach ($this->fields as $val) {
-            if (isset($original_data[$val]) && $original_data[$val]!='')
+            if (isset($original_data[$val]) && $original_data[$val] != '')
                 $new_data[$val] = $original_data[$val];
 //            else
 //                $new_data[$val] = null;

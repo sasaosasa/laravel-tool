@@ -15,7 +15,6 @@ class WxLogin extends WxUtil
 
     public function getCode($state = '', $isUserInfo = false, $redirectAction = 'Wx@anyWxGetUserInfo')
     {
-
         $url_tool = new Url();
         $redirectUrl = $url_tool->action($redirectAction);
         $url = $this->createOauthUrlForCode($redirectUrl, $isUserInfo, $state);

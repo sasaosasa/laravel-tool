@@ -35,6 +35,25 @@ function error_to_db($operation_name = '', $request_data = '', $return_data = ''
 //    $t_log->getLastSql();
 }
 
+function _output($data = "", $result = true, $errorcode = 0, $parameter = [])
+{
+    $res = [];
+    $res['result'] = $result;
+    $res['data'] = $data;
+    if (!$result)
+        $res['msg'] = $data;
+
+    $res['errorcode'] = $errorcode;
+    foreach ($parameter as $key => $val) {
+        $res[$key] = $val;
+    }
+    return $res;
+}
+
+function json_encode_cn($res)
+{
+    return json_encode($res, JSON_UNESCAPED_UNICODE);
+}
 
 function _pack($data = "", $result = true, $errorcode = 0, $parameter = [])
 {
@@ -64,47 +83,43 @@ function _packTotal($data, $total)
  */
 function _session($name = '', $value = '')
 {
-
     $session_prefix = config('myapp.session_prefix');
     if ($name == '') {
-//        return \Illuminate\Support\Facades\Session::all();
-        if (!isset($_SESSION[$session_prefix])) {
-            return null;
-        }
-        return $_SESSION[$session_prefix];
+        return \Illuminate\Support\Facades\Session::all();
     } else if ($value == '') {
-        if (!isset($_SESSION[$session_prefix][$name])) {
-            return null;
+        $res = \Illuminate\Support\Facades\Session::get($session_prefix . $name);
+        $arr = json_decode($res, true);
+        if ($res == '[]') {
+            return [];
+        } else if ($arr) {
+            return $arr;
+        } else {
+            return $res;
         }
-        return $_SESSION[$session_prefix][$name];
     } else {
-        $_SESSION[$session_prefix][$name] = $value;
+        if (is_array($value)) {
+            $value = json_encode($value);
+        }
+        \Illuminate\Support\Facades\Session::put($session_prefix . $name, $value);
         return $value;
     }
 }
 
-function _logout()
+function _unsetSession($name)
 {
     $session_prefix = config('myapp.session_prefix');
-    unset($_SESSION[$session_prefix]);
+    \Illuminate\Support\Facades\Session::forget($session_prefix . $name);
 }
 
 
 function _getInput($is_filters = true)
 {
-    $is_check = false;
-    if (config("myapp.input_check")) {
-        $is_check = true;
-    }
-    $data = get_original_data();
-    if ($is_check) {
-        $data = check_original_data($data);
-    }
-    if ($is_filters) {
-        return data_filters($data);
-    } else {
-        return $data;
-    }
+    return \Tool\Input::getInput($is_filters);
+}
+
+function _setData($data)
+{
+    \Tool\Input::setData($data);
 }
 
 function get_original_data()
@@ -203,11 +218,13 @@ function _userID($id = null)
             return $user_id;
         }
         $user_id = _session('user_id');
-        if (!isset($user_id) || $user_id == "") {
-            _pack("", false, -2);
-        }
         return $user_id;
     }
+}
+
+function _delUserID()
+{
+    _unsetSession('user_id');
 }
 
 /**
@@ -283,6 +300,21 @@ function _delWxUserInfo($app_id)
     \Illuminate\Support\Facades\Session::forget($app_id);
 }
 
+function _getWxQyUserInfo()
+{
+    return \Illuminate\Support\Facades\Session::get('wxqy-user-info');
+}
+
+function _setWxQyUserInfo($user)
+{
+    \Illuminate\Support\Facades\Session::put('wxqy-user-info', $user);
+}
+
+function _delWxQyUserInfo()
+{
+    \Illuminate\Support\Facades\Session::forget('wxqy-user-info');
+}
+
 function array_map_recursive($filter, $data)
 {
     $result = array();
@@ -328,8 +360,8 @@ function log_file($prefix = 'log_file', $operation_name = '', $request_data = ""
     $text[] = "操作名称：$operation_name";
     $text[] = "日期：" . date("Y-m-d H:i:s");
     $text[] = '请求地址：http://' . $_SERVER['HTTP_HOST'] . $_SERVER["REQUEST_URI"];
-    $text[] = 'GET数据：' . http_build_query($_GET);
-    $text[] = 'POST数据：' . http_build_query($_POST);
+    $text[] = 'GET数据：' . urldecode(http_build_query($_GET));
+    $text[] = 'POST数据：' . urldecode(http_build_query($_POST));
     $put_data = isset($GLOBALS["HTTP_RAW_POST_DATA"]) ? $GLOBALS["HTTP_RAW_POST_DATA"] : file_get_contents('php://input', 'r');
     $text[] = 'PUT数据：' . $put_data;
     $text[] = "输入数据：" . $request_str;
@@ -408,6 +440,16 @@ function notice($content = "错误！请查看日志！")
     $wxqy_base_fx = config("myapp.wxqy_base_fx");
     $wx = new \Tool\Wx\WxBasic();
     $data['agent_id'] = config("myapp.error_notice_agent_id");
-    $data['content'] = $content;
+    $data['content'] = "环境：" . config('myapp.env') . "\n" . $content;
     $wx->curl($wxqy_base_fx . "service/send-text/to-all", $data);
+}
+
+function str_replace_once($needle, $replace, $haystack)
+{
+    $pos = strpos($haystack, $needle);
+    if ($pos === false) {
+        // Nothing found
+        return $haystack;
+    }
+    return substr_replace($haystack, $replace, $pos, strlen($needle));
 }

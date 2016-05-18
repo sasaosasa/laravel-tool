@@ -10,7 +10,7 @@ namespace Tool\Wx;
 class WxBasic
 {
 
-    public function curl($url, $query = '', $setHeader = [])
+    public function curl($url, $query = '', $setHeader = ["Expect:"])
     {
         $ch = curl_init();
         //curl_setopt($ch, CURLOP_TIMEOUT, 10);
@@ -26,8 +26,8 @@ class WxBasic
         $response = curl_exec($ch);
 
         if (!$response) {
-//            dump(curl_error($ch));
             //$this->error("curl_error",curl_error($ch));
+            log_file('curl', "curl错误", $query, curl_error($ch), $url);
             return false;
         }
         if (curl_getinfo($ch, CURLINFO_HTTP_CODE) == '200') {
@@ -35,9 +35,7 @@ class WxBasic
             //$header = substr($response, 0, $headerSize);
             $body = substr($response, $headerSize);
         } else {
-//            echo $response;
-            //$this->error("header_error",$response);
-            //错误
+            log_file('curl', "非200", $query, $response, $url);
             return false;
         }
         curl_close($ch);//关闭
@@ -47,12 +45,12 @@ class WxBasic
     public function checkError($res, $type = '', $remarks = '')
     {
         if ($res == false) {
-            error_to_db("请求失败", $type, $remarks);
+//            error_to_db("请求失败", $type, $remarks);
             _pack($type . "请求失败", false);
         }
         $arr = json_decode($res, true);
         if ($arr == false || !is_array($arr) || (isset($arr['errcode']) && $arr['errcode'] !== 0)) {
-            error_to_db($res, $type, $remarks);
+//            error_to_db($res, $type, $remarks);
             _pack($type . "失败！ " . $res, false);
         }
         return $arr;

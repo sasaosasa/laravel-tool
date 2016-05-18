@@ -6,36 +6,33 @@
  * Time: 17:57
  */
 
-namespace Tool\Wx;
+namespace Tool\WxQy;
 
 
 use Illuminate\Support\Facades\Redis;
 
-class WxTicket extends WxExecute
+class WxQyJsapiTicket extends WxQyExecute
 {
     /**
      * 获取票据
      */
-    public function getTicket($type)
+    public function getTicket()
     {
-        if ($type != 'jsapi' && $type != 'wx_card') {
-            _pack("票据类型错误！", false);
-        }
-        $ticket = $this->getCacheTicket($type);
+        $ticket = $this->getCacheTicket();
         if (!$ticket) {
             //缓存中无Ticket，请求获取Ticket
-            $ticket = $this->requestTicket($type);
+            $ticket = $this->requestTicket();
             if (!$ticket) {
                 return false;
             }
-            $this->setCacheTicket($type, $ticket);
+            $this->setCacheTicket($ticket);
         }
         return $ticket;
     }
 
     public function getSignPackage($url)
     {
-        $jsapiTicket = $this->getTicket("jsapi");
+        $jsapiTicket = $this->getTicket();
         if (!$jsapiTicket) {
             return false;
         }
@@ -46,7 +43,7 @@ class WxTicket extends WxExecute
 
         $signature = sha1($string);
         $signPackage = array(
-            "appId" => $this->appId,
+            "appId" => $this->corp_id,
             "nonceStr" => $nonceStr,
             "timestamp" => $timestamp,
             "url" => $url,
@@ -59,15 +56,15 @@ class WxTicket extends WxExecute
     /**
      * 获取缓存Ticket
      */
-    private function getCacheTicket($type)
+    private function getCacheTicket()
     {
         $cache_type = config("myapp.cache_type");
         $data = [];
         if ($cache_type == 'redis') {
-            $data = json_decode(Redis::get($type . '_ticket_' . $this->appId), true);
+            $data = json_decode(Redis::get('jsapi_ticket' . $this->corp_id), true);
         } else {
             //默认使用文件
-            $path = "./php/storage/wxCache/" . $this->appId . '/' . $type . '_ticket.json';
+            $path = "./php/storage/wxCache/" . $this->corp_id . '/' . 'jsapi_ticket.json';
             if (is_file($path)) {
                 $data = json_decode(file_get_contents($path), true);
             }
@@ -81,16 +78,16 @@ class WxTicket extends WxExecute
     /**
      * 获取缓存中的AccessToken
      */
-    private function setCacheTicket($type, $ticket)
+    private function setCacheTicket($ticket)
     {
         $cache_type = config("myapp.cache_type");
         $data['expire_time'] = time() + 7000;
         $data['ticket'] = $ticket;
         if ($cache_type == 'redis') {
-            Redis::setex($type . '_ticket_' . $this->appId, 7000, json_encode($data));
+            Redis::setex('jsapi_ticket_' . $this->corp_id, 7000, json_encode($data));
         } else {
             //默认使用文件
-            $path = "./php/storage/wxCache/" . $this->appId . '/' . $type . '_ticket.json';
+            $path = "./php/storage/wxCache/" . $this->corp_id . '/' . 'jsapi_ticket.json';
             mkDirs(dirname($path));
             $fp = fopen($path, "w");
             fwrite($fp, json_encode($data));
@@ -101,12 +98,12 @@ class WxTicket extends WxExecute
     /**
      * 通过微信获取Ticket
      */
-    private function requestTicket($type)
+    private function requestTicket()
     {
-        $uri = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?type=$type&access_token=ACCESS_TOKEN";
+        $uri = "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=ACCESS_TOKEN";
         $data = $this->execute_return($uri);
         if ($data['result']) {
-            $res = json_decode($data['data'], true);
+            $res = $data['data'];
             return $res['ticket'];
         }
         return false;

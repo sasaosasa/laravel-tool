@@ -8,12 +8,14 @@
 
 namespace Tool\Routing;
 
+use Laravel\Lumen\Application;
+
 class Url
 {
     private $urlGenerator;
     public function __construct()
     {
-        $this->urlGenerator=app('redirect')->getUrlGenerator();
+        $this->urlGenerator=new \Laravel\Lumen\Routing\UrlGenerator(app());
     }
 
     /**
@@ -64,6 +66,6 @@ class Url
      */
     public function action($action, $parameters = [], $absolute = true)
     {
-        return $this->urlGenerator->action($action, $parameters, $absolute);
+        return $this->urlGenerator->route($action, $parameters, $absolute);
     }
 }

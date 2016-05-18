@@ -17,8 +17,9 @@ class WxQyUtil extends WxBasic
 
     public function __construct()
     {
-        $this->corpId = config('myapp.corpId');
-        $this->corpSecret = config('myapp.corpSecret');
+
+        $this->corpId = config('myapp.corp_id');
+        $this->corpSecret = config('myapp.corp_secret');
         if (empty($this->corpId) || empty($this->corpSecret)) {
             _pack("缺少corpId或corpSecret配置！", false);
         }
