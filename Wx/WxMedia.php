@@ -45,8 +45,15 @@ class WxMedia extends WxExecute
         }
     }
 
-    private function getImage($url, $path = "./php/storage/wxCache/qy/img/")
+    private function getImage($url, $path = null)
     {
+        if (empty($path)) {
+            $log_file_path = config('myapp.log_file_path');
+            if (empty($log_file_path)) {
+                _pack("找不到log_file_path配置文件", false);
+            }
+            $path = $log_file_path . 'wxCache/qy/img/';
+        }
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);//设置URL
         curl_setopt($ch, CURLOPT_POST, 1);//post

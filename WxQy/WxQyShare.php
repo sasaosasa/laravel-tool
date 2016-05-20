@@ -31,7 +31,11 @@ class WxQyShare extends WxQyUtil
 
     private function getApiTicket($type)
     {
-        $path = "./php/storage/wxCache/qy/{$type}_ticket.json";
+        $log_file_path = config('myapp.log_file_path');
+        if (empty($log_file_path)) {
+            _pack("找不到log_file_path配置文件", false);
+        }
+        $path = $log_file_path . "wxCache/qy/{$type}_ticket.json";
         if (is_file($path)) {
             $data = json_decode(file_get_contents($path), true);
             if ($data['expire_time'] > time()) {
@@ -42,7 +46,7 @@ class WxQyShare extends WxQyUtil
         // 如果是企业号用以下 URL 获取 ticket
         $url = "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=ACCESS_TOKEN";
 //        $url = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?type=$type&access_token=$accessToken";
-        $res=$this->execute($url);
+        $res = $this->execute($url);
         $ticket = $res['ticket'];
         if ($ticket) {
             $data['expire_time'] = time() + 7000;

@@ -118,7 +118,11 @@ class WxUtil extends WxBasic
     public function _getAccessToken($reload = false)
     {
         // access_token 应该全局存储与更新，以下代码以写入到文件中做示例
-        $path = "./php/storage/wxCache/access_token.json";
+        $log_file_path = config('myapp.log_file_path');
+        if (empty($log_file_path)) {
+            _pack("找不到log_file_path配置文件", false);
+        }
+        $path = $log_file_path . "wxCache/access_token.json";
         if (!$reload && is_file($path)) {
             $data = json_decode(file_get_contents($path), true);
             if ($data['expire_time'] > time()) {

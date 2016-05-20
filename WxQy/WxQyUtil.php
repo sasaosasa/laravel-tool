@@ -17,11 +17,15 @@ class WxQyUtil extends WxBasic
 
     public function __construct()
     {
-
         $this->corpId = config('myapp.corp_id');
         $this->corpSecret = config('myapp.corp_secret');
         if (empty($this->corpId) || empty($this->corpSecret)) {
+            $this->corpId = config('myapp.corpId');
+            $this->corpSecret = config('myapp.corpSecret');
+        }
+        if (empty($this->corpId) || empty($this->corpSecret)) {
             _pack("缺少corpId或corpSecret配置！", false);
+
         }
     }
 
@@ -84,7 +88,11 @@ class WxQyUtil extends WxBasic
     public function getAccessToken($reload = false)
     {
         // access_token 应该全局存储与更新，以下代码以写入到文件中做示例
-        $path = "./php/storage/wxCache/qy/access_token.json";
+        $log_file_path = config('myapp.log_file_path');
+        if (empty($log_file_path)) {
+            _pack("找不到log_file_path配置文件", false);
+        }
+        $path = $log_file_path . "wxCache/qy/access_token.json";
         if ($reload && is_file($path)) {
             $data = json_decode(file_get_contents($path), true);
             if ($data['expire_time'] > time()) {

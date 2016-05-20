@@ -64,7 +64,11 @@ class WxQyJsapiTicket extends WxQyExecute
             $data = json_decode(Redis::get('jsapi_ticket' . $this->corp_id), true);
         } else {
             //默认使用文件
-            $path = "./php/storage/wxCache/" . $this->corp_id . '/' . 'jsapi_ticket.json';
+            $log_file_path = config('myapp.log_file_path');
+            if (empty($log_file_path)) {
+                _pack("找不到log_file_path配置文件", false);
+            }
+            $path = $log_file_path . "wxCache/" . $this->corp_id . '/' . 'jsapi_ticket.json';
             if (is_file($path)) {
                 $data = json_decode(file_get_contents($path), true);
             }
@@ -87,7 +91,11 @@ class WxQyJsapiTicket extends WxQyExecute
             Redis::setex('jsapi_ticket_' . $this->corp_id, 7000, json_encode($data));
         } else {
             //默认使用文件
-            $path = "./php/storage/wxCache/" . $this->corp_id . '/' . 'jsapi_ticket.json';
+            $log_file_path = config('myapp.log_file_path');
+            if (empty($log_file_path)) {
+                _pack("找不到log_file_path配置文件", false);
+            }
+            $path = $log_file_path . "wxCache/" . $this->corp_id . '/' . 'jsapi_ticket.json';
             mkDirs(dirname($path));
             $fp = fopen($path, "w");
             fwrite($fp, json_encode($data));

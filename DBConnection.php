@@ -129,6 +129,12 @@ class DBConnection
         return $this;
     }
 
+    public function orWhere($column, $operator = null, $value = null)
+    {
+        $this->connection = $this->connection->orWhere($column, $operator, $value);
+        return $this;
+    }
+
     public function whereNull($column, $boolean = 'and', $not = false)
     {
         $this->connection = $this->connection->whereNull($column, $boolean, $not);

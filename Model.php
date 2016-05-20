@@ -18,6 +18,7 @@ class Model
     public $is_update = true;
     public $is_delete = true;
 
+    protected $connection;//数据库链接
     protected $table;
     protected $primary_key;//主键
     protected $foreign_key;//外键
@@ -201,42 +202,43 @@ class Model
             $new_data_arr = [];
             foreach ($original_data as $val) {
                 //组织数据,过滤不需要的字段
-                $new_data = $this->assemblyData($val);
 
-                if (!empty($new_data)) {
-                    if ($this->is_exists_primary_key($new_data)) {
-                        $new_data_arr[] = $new_data;
-                        //初始化插入更新
-                        $this->initUpdateData($new_data);
-                    } else {
-                        //初始化插入数据
-                        $this->initInsertData($new_data);
-                    }
+                if ($this->is_exists_primary_key($val)) {
+                    $new_data = $this->assemblyUpdateData($val);
+                    $new_data_arr[] = $new_data;
+
+                    //初始化插入更新
+                    $this->initUpdateData($new_data);
+                } else {
+                    //初始化插入数据
+                    $new_data = $this->assemblyInsertData($val);
+                    $this->initInsertData($new_data);
                 }
             }
             //初始化要删除的数据
             $this->initDeleteData($new_data_arr);
         } else {
             //单条数据
-            //组织数据,过滤不需要的字段
-            $new_data = $this->assemblyData($original_data);
-            //初始化插入或更新
-            if (!empty($new_data)) {
-                if ($this->is_exists_primary_key($new_data)) {
-                    //通过主键查询
-                    $this->queryByPrimaryKey($new_data);
-                    if (empty($this->db_data)) {
 
-                        $this->initInsertData($new_data);
-                    } else {
+            if ($this->is_exists_primary_key($original_data)) {
+                //通过主键查询
+                $this->queryByPrimaryKey($original_data);
 
-                        //初始化插入更新
-                        $this->initUpdateData($new_data);
-                    }
-                } else {
-                    //初始化插入数据
+                if (empty($this->db_data)) {
+                    //组织数据,过滤不需要的字段
+                    $new_data = $this->assemblyInsertData($original_data);
                     $this->initInsertData($new_data);
+                } else {
+                    //组织数据,过滤不需要的字段
+                    $new_data = $this->assemblyUpdateData($original_data);
+                    //初始化插入更新
+                    $this->initUpdateData($new_data);
                 }
+            } else {
+                //组织数据,过滤不需要的字段
+                $new_data = $this->assemblyInsertData($original_data);
+                //初始化插入数据
+                $this->initInsertData($new_data);
             }
         }
     }
@@ -251,10 +253,8 @@ class Model
      */
     private function initInsertData($data)
     {
-
         if ($this->is_insert) {
             if ($this->initInsertDataCB($data)) {
-
                 $this->insert_data[] = $data;
                 if ($this->is_created_at) {
                     $data['created_at'] = _now();
@@ -262,6 +262,7 @@ class Model
                 if ($this->is_create_id) {
                     $data['create_id'] = _userID();
                 }
+
                 if (!empty($this->foreign_key_val)) {
                     $data = array_merge($data, $this->foreign_key_val);
                 }
@@ -478,18 +479,29 @@ class Model
     }
 
     /**
-     * 组织数据,过滤不需要的字段
+     * 组织数据,过滤不需要的字段(更新)
      */
-    private function assemblyData($original_data)
+    private function assemblyUpdateData($original_data)
+    {
+        $new_data = [];
+        foreach ($this->fields as $val) {
+            if (isset($original_data[$val]))
+                $new_data[$val] = $original_data[$val];
+        }
+
+        return $new_data;
+    }
+
+    /**
+     * 组织数据,过滤不需要的字段(插入)
+     */
+    private function assemblyInsertData($original_data)
     {
         $new_data = [];
         foreach ($this->fields as $val) {
             if (isset($original_data[$val]) && $original_data[$val] != '')
                 $new_data[$val] = $original_data[$val];
-//            else
-//                $new_data[$val] = null;
         }
-
         return $new_data;
     }
 

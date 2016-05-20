@@ -26,6 +26,10 @@ class WxQyToken extends WxBasic
             $this->corp_id = config('myapp.corp_id');
             $this->corp_secret = config('myapp.corp_secret');
             if (empty($this->corp_id) || empty($this->corp_secret)) {
+                $this->corp_id = config('myapp.corpId');
+                $this->corp_secret = config('myapp.corpSecret');
+            }
+            if (empty($this->corp_id) || empty($this->corp_secret)) {
                 _pack("缺少corp_id或corp_secret配置！", false);
             }
         }
@@ -48,7 +52,7 @@ class WxQyToken extends WxBasic
         }
         return $url;
     }
-    
+
 
     /**
      * 是否是无效的AccessToken
@@ -113,7 +117,11 @@ class WxQyToken extends WxBasic
             $data = json_decode(Redis::get("access_token_" . $this->corp_id), true);
         } else {
             //默认使用文件
-            $path = "./php/storage/wxCache/" . $this->corp_id . "/access_token.json";
+            $log_file_path = config('myapp.log_file_path');
+            if (empty($log_file_path)) {
+                _pack("找不到log_file_path配置文件", false);
+            }
+            $path = $log_file_path . "wxCache/" . $this->corp_id . "/access_token.json";
             if (is_file($path)) {
                 $data = json_decode(file_get_contents($path), true);
             }
@@ -136,7 +144,11 @@ class WxQyToken extends WxBasic
             Redis::setex("access_token_" . $this->corp_id, 7000, json_encode($data));
         } else {
             //默认使用文件
-            $path = "./php/storage/wxCache/" . $this->corp_id . "/access_token.json";
+            $log_file_path = config('myapp.log_file_path');
+            if (empty($log_file_path)) {
+                _pack("找不到log_file_path配置文件", false);
+            }
+            $path = $log_file_path . "wxCache/" . $this->corp_id . "/access_token.json";
             mkDirs(dirname($path));
             $fp = fopen($path, "w");
             fwrite($fp, json_encode($data));
